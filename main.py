@@ -2,6 +2,9 @@
 """
 パチンコ業界ニュース LINE配信ボット
 直近24時間以内のパチンコ/パチスロ関連ニュースを取得し、LINEへ配信します。
+
+配信方式: LINE Messaging API (Push / Broadcast)
+※ LINE Notify は 2025年3月31日にサービス終了しました。
 """
 
 import os
@@ -10,12 +13,7 @@ import argparse
 from dotenv import load_dotenv
 
 from news_fetcher import fetch_news
-from line_sender import (
-    send_via_notify,
-    send_via_messaging_api,
-    build_news_message_notify,
-    build_news_messages_api,
-)
+from line_sender import send_push_message, send_broadcast_message, build_news_messages
 
 load_dotenv()
 
@@ -31,40 +29,34 @@ def run(hours: int = None, max_items: int = None, dry_run: bool = False):
     """Fetch news and deliver to LINE."""
     hours = hours or int(os.getenv("NEWS_HOURS", "24"))
     max_items = max_items or int(os.getenv("MAX_NEWS_ITEMS", "10"))
-    delivery_method = os.getenv("LINE_DELIVERY_METHOD", "notify").lower()
 
     logger.info(f"パチンコ業界ニュースを取得中... (過去{hours}時間, 最大{max_items}件)")
     articles = fetch_news(hours=hours, max_items=max_items)
     logger.info(f"{len(articles)} 件のニュースを取得しました。")
 
+    messages = build_news_messages(articles, hours)
+
     if dry_run:
         print("\n--- DRY RUN: 配信内容プレビュー ---")
-        msg = build_news_message_notify(articles, hours)
-        print(msg)
+        for msg in messages:
+            print(msg.get("text", ""))
+            print("---")
         return True
 
-    if delivery_method == "notify":
-        token = os.getenv("LINE_NOTIFY_TOKEN")
-        if not token:
-            logger.error("LINE_NOTIFY_TOKEN が設定されていません。.env を確認してください。")
-            return False
-        message = build_news_message_notify(articles, hours)
-        return send_via_notify(token, message)
-
-    elif delivery_method == "messaging_api":
-        token = os.getenv("LINE_CHANNEL_ACCESS_TOKEN")
-        target_id = os.getenv("LINE_TARGET_ID")
-        if not token or not target_id:
-            logger.error(
-                "LINE_CHANNEL_ACCESS_TOKEN または LINE_TARGET_ID が設定されていません。"
-            )
-            return False
-        messages = build_news_messages_api(articles, hours)
-        return send_via_messaging_api(token, target_id, messages)
-
-    else:
-        logger.error(f"不明な配信方式: {delivery_method}. 'notify' または 'messaging_api' を指定してください。")
+    token = os.getenv("LINE_CHANNEL_ACCESS_TOKEN")
+    if not token:
+        logger.error("LINE_CHANNEL_ACCESS_TOKEN が設定されていません。.env を確認してください。")
         return False
+
+    target_id = os.getenv("LINE_TARGET_ID", "").strip()
+
+    if target_id:
+        # Push: 特定のユーザー/グループへ送信
+        return send_push_message(token, target_id, messages)
+    else:
+        # Broadcast: 全フォロワーへ送信
+        logger.info("LINE_TARGET_ID 未設定のため Broadcast で全フォロワーへ送信します。")
+        return send_broadcast_message(token, messages)
 
 
 def main():
@@ -92,7 +84,7 @@ def main():
         "--schedule",
         type=str,
         default=None,
-        help="定期実行の間隔（例: '08:00' で毎朝8時に実行）",
+        help="毎日実行する時刻（例: '08:00' で毎朝8時に配信）",
     )
     args = parser.parse_args()
 
@@ -104,7 +96,7 @@ def main():
         schedule.every().day.at(args.schedule).do(
             run, hours=args.hours, max_items=args.max_items, dry_run=args.dry_run
         )
-        # Run immediately on start
+        # 起動時に即時実行
         run(hours=args.hours, max_items=args.max_items, dry_run=args.dry_run)
         while True:
             schedule.run_pending()
