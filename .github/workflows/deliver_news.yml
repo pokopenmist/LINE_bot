@@ -1,0 +1,32 @@
+name: パチンコ業界ニュース LINE配信
+
+on:
+  schedule:
+    # 毎朝8時（日本時間）に実行 → UTC 23:00（前日）
+    - cron: '0 23 * * *'
+  workflow_dispatch:
+    # GitHubの画面から手動実行も可能
+
+jobs:
+  deliver:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: リポジトリをチェックアウト
+        uses: actions/checkout@v4
+
+      - name: Python セットアップ
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: 依存パッケージをインストール
+        run: pip install -r requirements.txt
+
+      - name: ニュースを取得してLINEへ配信
+        env:
+          LINE_CHANNEL_ACCESS_TOKEN: ${{ secrets.LINE_CHANNEL_ACCESS_TOKEN }}
+          LINE_TARGET_ID: ${{ secrets.LINE_TARGET_ID }}
+          NEWS_HOURS: 24
+          MAX_NEWS_ITEMS: 10
+        run: python main.py
