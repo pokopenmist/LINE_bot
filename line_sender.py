@@ -5,6 +5,20 @@ logger = logging.getLogger(__name__)
 
 LINE_PUSH_API = "https://api.line.me/v2/bot/message/push"
 LINE_BROADCAST_API = "https://api.line.me/v2/bot/message/broadcast"
+TINYURL_API = "https://tinyurl.com/api-create.php"
+
+
+def shorten_url(url: str) -> str:
+    """Shorten a URL using TinyURL API. Returns original URL on failure."""
+    if not url:
+        return url
+    try:
+        resp = requests.get(TINYURL_API, params={"url": url}, timeout=5)
+        if resp.status_code == 200 and resp.text.startswith("https://tinyurl.com/"):
+            return resp.text.strip()
+    except Exception as e:
+        logger.warning(f"URL短縮失敗 ({url[:50]}...): {e}")
+    return url
 
 
 def send_push_message(token: str, target_id: str, messages: list[dict]) -> bool:
@@ -74,11 +88,12 @@ def build_news_messages(articles: list[dict], hours: int) -> list[dict]:
     chunk_messages = []
 
     for i, a in enumerate(articles, 1):
+        short_url = shorten_url(a["url"])
         entry = (
             f"■ {i}. {a['title']}\n"
             f"📅 {a['published_at']}\n"
             f"出典: {a['source']}\n"
-            f"🔗 {a['url']}"
+            f"🔗 {short_url}"
         )
         candidate = "\n\n".join(chunk_lines + [entry])
         if len(candidate) > 4800:
