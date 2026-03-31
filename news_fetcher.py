@@ -9,38 +9,38 @@ logger = logging.getLogger(__name__)
 
 JST = timezone(timedelta(hours=9))
 
-# RSS feed sources for pachinko industry news
+# RSS feed sources for AI latest news
 RSS_SOURCES = [
     {
-        "name": "Googleニュース - パチンコ業界",
+        "name": "Googleニュース - AI最新情報",
         "url": "https://news.google.com/rss/search?q={}&hl=ja&gl=JP&ceid=JP:ja".format(
-            quote("パチンコ 業界")
+            quote("AI 人工知能 最新")
         ),
     },
     {
-        "name": "Googleニュース - パチスロ業界",
+        "name": "Googleニュース - 生成AI",
         "url": "https://news.google.com/rss/search?q={}&hl=ja&gl=JP&ceid=JP:ja".format(
-            quote("パチスロ 業界")
+            quote("生成AI LLM")
         ),
     },
     {
-        "name": "Googleニュース - 遊技機新台",
+        "name": "Googleニュース - ChatGPT Claude Gemini",
         "url": "https://news.google.com/rss/search?q={}&hl=ja&gl=JP&ceid=JP:ja".format(
-            quote("遊技機 新台")
+            quote("ChatGPT OR Claude OR Gemini")
         ),
     },
     {
-        "name": "情報島",
-        "url": "https://johojima.com/feed",
+        "name": "TechCrunch Japan",
+        "url": "https://jp.techcrunch.com/feed/",
     },
     {
-        "name": "グリーンべると",
-        "url": "https://green-verde.com/feed",
+        "name": "MIT Technology Review Japan",
+        "url": "https://www.technologyreview.jp/feed/",
     },
 ]
 
 HEADERS = {
-    "User-Agent": "Mozilla/5.0 (compatible; PachinkoNewsBot/1.0)"
+    "User-Agent": "Mozilla/5.0 (compatible; AINewsBot/1.0)"
 }
 
 
@@ -115,7 +115,7 @@ def parse_rss_feed(xml_text: str, source_name: str) -> list[dict]:
 
 def fetch_news(hours: int = 24, max_items: int = 10) -> list[dict]:
     """
-    Fetch pachinko industry news published within the last `hours` hours.
+    Fetch AI latest news published within the last `hours` hours.
     Returns a list of dicts: {title, url, source, published_at, published_dt}
     """
     cutoff = datetime.now(timezone.utc) - timedelta(hours=hours)

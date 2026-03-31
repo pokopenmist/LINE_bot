@@ -56,7 +56,7 @@ def build_news_messages(articles: list[dict], hours: int) -> list[dict]:
         return [
             {
                 "type": "text",
-                "text": f"【パチンコ業界ニュース】\n過去{hours}時間以内の新着ニュースはありません。",
+                "text": f"【AI最新情報】\n過去{hours}時間以内の新着ニュースはありません。",
             }
         ]
 
@@ -64,7 +64,7 @@ def build_news_messages(articles: list[dict], hours: int) -> list[dict]:
     messages = [
         {
             "type": "text",
-            "text": f"【パチンコ業界ニュース】\n直近{hours}時間の新着 {len(articles)}件",
+            "text": f"【AI最新情報】\n直近{hours}時間の新着 {len(articles)}件",
         }
     ]
 

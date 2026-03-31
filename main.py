@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-パチンコ業界ニュース LINE配信ボット
-直近24時間以内のパチンコ/パチスロ関連ニュースを取得し、LINEへ配信します。
+AI最新情報 LINE配信ボット
+直近168時間以内のAI関連ニュースを取得し、LINEへ配信します。
 
 配信方式: LINE Messaging API (Push / Broadcast)
 ※ LINE Notify は 2025年3月31日にサービス終了しました。
@@ -30,7 +30,7 @@ def run(hours: int = None, max_items: int = None, dry_run: bool = False):
     hours = hours or int(os.getenv("NEWS_HOURS", "24"))
     max_items = max_items or int(os.getenv("MAX_NEWS_ITEMS", "10"))
 
-    logger.info(f"パチンコ業界ニュースを取得中... (過去{hours}時間, 最大{max_items}件)")
+    logger.info(f"AI最新情報を取得中... (過去{hours}時間, 最大{max_items}件)")
     articles = fetch_news(hours=hours, max_items=max_items)
     logger.info(f"{len(articles)} 件のニュースを取得しました。")
 
@@ -61,7 +61,7 @@ def run(hours: int = None, max_items: int = None, dry_run: bool = False):
 
 def main():
     parser = argparse.ArgumentParser(
-        description="パチンコ業界ニュースをLINEへ配信するボット"
+        description="AI最新情報をLINEへ配信するボット"
     )
     parser.add_argument(
         "--hours",
